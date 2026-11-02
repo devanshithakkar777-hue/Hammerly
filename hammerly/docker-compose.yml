@@ -1,0 +1,27 @@
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: hammerly
+      POSTGRES_PASSWORD: hammerly
+      POSTGRES_DB: hammerly
+    volumes: [pgdata:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hammerly"]
+      interval: 3s
+      retries: 20
+  app:
+    build: .
+    depends_on:
+      db: {condition: service_healthy}
+    environment:
+      DATABASE_URL: postgresql+asyncpg://hammerly:hammerly@db:5432/hammerly
+      JWT_SECRET: ${JWT_SECRET:-change-me-to-a-long-random-string-please}
+      ADMIN_EMAILS: ${ADMIN_EMAILS:-admin@hammerly.test}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      CORS_ORIGINS: http://localhost:8000
+    ports: ["8000:8000"]
+    volumes: [uploads:/data/uploads]
+volumes:
+  pgdata:
+  uploads:
